@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪🔍 FOOD DETECTIVES • 3D nutrient lab</title>
+    <style>
+        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', system-ui, sans-serif; }
+        #info-panel {
+            position: absolute; top: 20px; left: 20px; background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(8px); padding: 18px 25px; border-radius: 40px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2); border: 2px solid white;
+            pointer-events: none; z-index: 10; display: flex; align-items: center; gap: 15px;
+        }
+        #info-panel h1 { margin: 0; font-size: 2rem; color: #2d3e50; letter-spacing: 1px; }
+        #info-panel .badge {
+            background: #ffb347; padding: 8px 18px; border-radius: 40px; color: white;
+            font-weight: bold; font-size: 1.2rem; text-shadow: 1px 1px 0 #a55d2e;
+        }
+        #test-kit {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 20px; background: rgba(30, 30, 40, 0.8);
+            backdrop-filter: blur(12px); padding: 20px 35px; border-radius: 80px;
+            border: 3px solid #ffd966; z-index: 20; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .test-btn {
+            background: #f8f9fa; border: none; border-radius: 50px; padding: 15px 30px;
+            font-size: 1.5rem; font-weight: bold; display: flex; align-items: center; gap: 12px;
+            cursor: pointer; transition: 0.2s; box-shadow: 0 5px 0 #adb5bd;
+            border-bottom: 3px solid #6c757d; pointer-events: auto;
+        }
+        .test-btn.active { transform: translateY(4px); box-shadow: 0 1px 0 #6c757d; }
+        .test-btn.starch { background: #cdb4db; color: #3c096c; }
+        .test-btn.protein { background: #b7e4c7; color: #1e4a2b; }
+        .test-btn.fat { background: #ffd7ba; color: #9e4a1f; }
+        .test-btn.reset { background: #e9ecef; color: #2b3d4f; font-size: 1.2rem; }
+        #result-area {
+            position: absolute; top: 120px; right: 30px; width: 280px;
+            background: rgba(255,255,240,0.95); border-radius: 35px; padding: 20px;
+            box-shadow: 0 15px 30px rgba(0,40,20,0.3); border: 3px solid gold;
+            z-index: 15; backdrop-filter: blur(5px); font-size: 1.1rem;
+            pointer-events: none; transition: 0.3s;
+        }
+        #result-area h3 { margin: 0 0 10px; font-size: 1.8rem; display: flex; gap: 10px; }
+        .food-log { max-height: 250px; overflow-y: auto; margin: 10px 0; padding-right: 5px; }
+        .log-item { padding: 6px 10px; border-radius: 40px; margin: 5px 0; background: #fff5cf; border-left: 8px solid gray; }
+        .starch-pos { border-left-color: #1e3a5f; background: #e7eefa; }
+        .protein-pos { border-left-color: #7b2e8a; background: #f2d9ff; }
+        .fat-pos { border-left-color: #b85e00; background: #ffe1b3; }
+        #thought-emoji { font-size: 2.5rem; text-align: center; filter: drop-shadow(2px 4px 4px #00000033); }
+        .instruction { color: #2c3e50; font-weight: 500; background: white; padding: 8px 15px; border-radius: 30px; margin-top: 10px; text-align: center; }
+        .safety-ribbon { position: absolute; bottom: 120px; left: 20px; background: #ffd966ee; padding: 6px 16px; border-radius: 40px; font-weight: bold; z-index: 25; border: 2px solid red; }
+    </style>
+</head>
+<body>
+    <!-- top panel -->
+    <div id="info-panel">
+        <h1>🔎 FOOD DETECTIVES</h1>
+        <div class="badge">starch • protein • fat</div>
+        <span style="font-size:2rem;">🥔🥚🧈</span>
+    </div>
+
+    <!-- safety reminder -->
+    <div class="safety-ribbon">⚠️ iodine stains • ask teacher for chemicals ⚠️</div>
+
+    <!-- test kit (buttons) -->
+    <div id="test-kit">
+        <button class="test-btn starch" id="btn-starch">🧪<span>STARCH</span> (iodine)</button>
+        <button class="test-btn protein" id="btn-protein">🧴<span>PROTEIN</span> (biuret)</button>
+        <button class="test-btn fat" id="btn-fat">🕯️<span>FAT</span> (paper)</button>
+        <button class="test-btn reset" id="btn-reset">✨ RESET</button>
+    </div>
+
+    <!-- result card (live feedback) -->
+    <div id="result-area">
+        <h3>📋 detective notes <span id="thought-emoji">🕵️‍♂️</span></h3>
+        <div id="food-log" class="food-log">
+            <div class="log-item" style="border-left-color:gray;">✨ click a food to test</div>
+        </div>
+        <div class="instruction" id="live-feedback">choose a test & then a food</div>
+    </div>
+
+    <!-- 3D canvas -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+        // --- setup scene ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xa8e6cf); // soft mint
+        // fun gradient-ish via fog
+        scene.fog = new THREE.Fog(0xa8e6cf, 15, 30);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(5, 4, 12);
+        camera.lookAt(0, 1, 0);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true; // nicer effect
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.body.appendChild(renderer.domElement);
+
+        const labelRenderer = new CSS2DRenderer();
+        labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        labelRenderer.domElement.style.position = 'absolute';
+        labelRenderer.domElement.style.top = '0px';
+        labelRenderer.domElement.style.left = '0px';
+        labelRenderer.domElement.style.pointerEvents = 'none'; // allow clicking through labels to canvas
+        document.body.appendChild(labelRenderer.domElement);
+
+        // controls
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.maxPolarAngle = Math.PI / 2.2; // limit looking below floor
+        controls.minDistance = 5;
+        controls.maxDistance = 20;
+        controls.enablePan = false;
+        controls.target.set(0, 1.5, 0);
+
+        // --- lights ---
+        const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambient);
+        const mainLight = new THREE.DirectionalLight(0xfff5d1, 1.2);
+        mainLight.position.set(5, 10, 7);
+        mainLight.castShadow = true;
+        mainLight.receiveShadow = true;
+        mainLight.shadow.mapSize.width = 1024;
+        mainLight.shadow.mapSize.height = 1024;
+        const d = 10;
+        mainLight.shadow.camera.left = -d;
+        mainLight.shadow.camera.right = d;
+        mainLight.shadow.camera.top = d;
+        mainLight.shadow.camera.bottom = -d;
+        mainLight.shadow.camera.near = 2;
+        mainLight.shadow.camera.far = 20;
+        scene.add(mainLight);
+
+        // fill light
+        const fillLight = new THREE.PointLight(0xffeedd, 0.5);
+        fillLight.position.set(-3, 4, 5);
+        scene.add(fillLight);
+
+        // --- floor / background props ---
+        const planeGeometry = new THREE.CircleGeometry(12, 32);
+        const planeMaterial = new THREE.MeshStandardMaterial({ color: 0xd9b382 }); // wood-like
+        const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+        plane.rotation.x = -Math.PI / 2;
+        plane.position.y = 0;
+        plane.receiveShadow = true;
+        scene.add(plane);
+
+        // lab bench props: beakers, books (simple decorations)
+        function addDeco() {
+            const pillarMat = new THREE.MeshStandardMaterial({ color: 0xaaccff });
+            const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 1.5), pillarMat);
+            pillar.position.set(-3, 0.75, -3);
+            pillar.castShadow = true; pillar.receiveShadow = true;
+            scene.add(pillar);
+            
+            const bookMat = new THREE.MeshStandardMaterial({ color: 0xffaaaa });
+            const book = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.2, 0.8), bookMat);
+            book.position.set(2.5, 0.1, -2);
+            book.castShadow = true; book.receiveShadow = true;
+            scene.add(book);
+            
+            // little bottle
+            const bottleMat = new THREE.MeshStandardMaterial({ color: 0x88dd88, transparent: true, opacity: 0.5 });
+            const bottle = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.8), bottleMat);
+            bottle.position.set(-1, 0.4, -3.5);
+            bottle.castShadow = true; bottle.receiveShadow = true;
+            scene.add(bottle);
+        }
+        addDeco();
+
+        // --- interactive food items (data) ---
+        const foods = [
+            { name: '🥔 potato', pos: [-2.0, 0.2, 0.5], starch: true, protein: false, fat: false, color: 0xc99a6b, emoji: '🥔' },
+            { name: '🍚 rice', pos: [0.5, 0.1, -0.8], starch: true, protein: false, fat: false, color: 0xf5f0d7, emoji: '🍚' },
+            { name: '🍞 bread', pos: [2.2, 0.3, 1.2], starch: true, protein: false, fat: false, color: 0xe0b059, emoji: '🍞' },
+            { name: '🥚 egg white', pos: [-1.2, 0.5, 2.5], starch: false, protein: true, fat: true, color: 0xf3f0e0, emoji: '🥚' },
+            { name: '🫘 dal', pos: [1.8, 0.2, -1.8], starch: false, protein: true, fat: false, color: 0xb37b5e, emoji: '🫘' },
+            { name: '🧈 butter', pos: [-2.5, 0.3, -1.8], starch: false, protein: false, fat: true, color: 0xffe57a, emoji: '🧈' },
+            { name: '🥜 peanut', pos: [3.0, 0.2, 0.0], starch: false, protein: true, fat: true, color: 0xc49a6c, emoji: '🥜' },
+            { name: '🍎 apple', pos: [0.0, 0.3, 2.8], starch: false, protein: false, fat: false, color: 0xeF4f4f, emoji: '🍎' }
+        ];
+
+        // store meshes for interactivity
+        const foodMeshes = [];
+
+        // food creation helper
+        foods.forEach((f) => {
+            const geometry = new THREE.SphereGeometry(0.45, 32, 32); // most foods as spheres (different scales for variety)
+            const material = new THREE.MeshStandardMaterial({ color: f.color, emissive: 0x221100, emissiveIntensity: 0.1 });
+            const sphere = new THREE.Mesh(geometry, material);
+            sphere.position.set(f.pos[0], f.pos[1], f.pos[2]);
+            sphere.castShadow = true;
+            sphere.receiveShadow = true;
+            sphere.userData = { type: 'food', food: f }; // attach data
+            scene.add(sphere);
+            
+            // add a small stem or detail for some fun
+            if (f.name.includes('apple')) {
+                const stemGeo = new THREE.CylinderGeometry(0.05, 0.05, 0.2);
+                const stemMat = new THREE.MeshStandardMaterial({ color: 0x5a3e1a });
+                const stem = new THREE.Mesh(stemGeo, stemMat);
+                stem.position.set(0, 0.5, 0.1);
+                sphere.add(stem);
+            }
+            
+            foodMeshes.push(sphere);
+
+            // CSS2D label (always visible name)
+            const div = document.createElement('div');
+            div.textContent = f.emoji;
+            div.style.fontSize = '32px';
+            div.style.fontWeight = 'bold';
+            div.style.textShadow = '2px 2px 4px #00000080';
+            div.style.background = 'rgba(255,255,240,0.7)';
+            div.style.padding = '4px 12px';
+            div.style.borderRadius = '40px';
+            div.style.border = '2px solid white';
+            div.style.backdropFilter = 'blur(4px)';
+            div.style.pointerEvents = 'none';
+            
+            const label = new CSS2DObject(div);
+            label.position.set(f.pos[0], f.pos[1] + 0.9, f.pos[2]);
+            scene.add(label);
+        });
+
+        // --- state for active test ---
+        let activeTest = null; // 'starch', 'protein', 'fat'
+        const logDiv = document.getElementById('food-log');
+        const liveFeedback = document.getElementById('live-feedback');
+        const thoughtEmoji = document.getElementById('thought-emoji');
+
+        function addLog(message, type = 'info') {
+            const entry = document.createElement('div');
+            entry.className = 'log-item';
+            if (type === 'starch') entry.classList.add('starch-pos');
+            if (type === 'protein') entry.classList.add('protein-pos');
+            if (type === 'fat') entry.classList.add('fat-pos');
+            entry.textContent = message;
+            logDiv.prepend(entry); // latest first
+            if (logDiv.children.length > 8) {
+                logDiv.removeChild(logDiv.lastElementChild);
+            }
+        }
+
+        function clearLog() {
+            logDiv.innerHTML = '<div class="log-item" style="border-left-color:gray;">✨ new session</div>';
+        }
+
+        // button event listeners
+        document.getElementById('btn-starch').addEventListener('click', () => {
+            activeTest = 'starch';
+            liveFeedback.innerHTML = '🧪 <strong>starch test active</strong> — now click a food!';
+            thoughtEmoji.textContent = '🧪🔍';
+            // highlight active button (simple class)
+        });
+        document.getElementById('btn-protein').addEventListener('click', () => {
+            activeTest = 'protein';
+            liveFeedback.innerHTML = '🧴 <strong>protein test active</strong> — click a food!';
+            thoughtEmoji.textContent = '🧴✨';
+        });
+        document.getElementById('btn-fat').addEventListener('click', () => {
+            activeTest = 'fat';
+            liveFeedback.innerHTML = '🕯️ <strong>fat test active</strong> — click a food (paper spot)';
+            thoughtEmoji.textContent = '🧻👀';
+        });
+        document.getElementById('btn-reset').addEventListener('click', () => {
+            activeTest = null;
+            liveFeedback.innerHTML = '✨ choose a test, then a food';
+            thoughtEmoji.textContent = '🕵️‍♂️🔎';
+            clearLog();
+            // reset any visual glows? we remove outlines
+            foodMeshes.forEach(mesh => {
+                mesh.material.emissive.setHex(0x221100);
+                mesh.material.emissiveIntensity = 0.1;
+                // also remove any temporary children (grease spot etc) but keep simple
+            });
+        });
+
+        // raycasting for clicks
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+
+        renderer.domElement.addEventListener('click', (event) => {
+            // calculate mouse pos in normalized device coords
+            const rect = renderer.domElement.getBoundingClientRect();
+            mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+
+            const intersects = raycaster.intersectObjects(foodMeshes);
+            if (intersects.length > 0) {
+                const hit = intersects[0].object;
+                const food = hit.userData.food;
+                if (!food) return;
+                
+                if (!activeTest) {
+                    addLog(`⚠️ first select a test (starch/protein/fat)`, 'info');
+                    liveFeedback.innerHTML = '👆 pick a test above first!';
+                    return;
+                }
+
+                // perform test
+                let resultMessage = '';
+                let resultType = 'info';
+                let emoji = '';
+
+                // visual feedback: flash the food
+                hit.material.emissive.setHex(0x884400);
+                hit.material.emissiveIntensity = 0.6;
+                setTimeout(() => {
+                    hit.material.emissiveIntensity = 0.1;
+                    hit.material.emissive.setHex(0x221100);
+                }, 400);
+
+                if (activeTest === 'starch') {
+                    if (food.starch) {
+                        resultMessage = `🥔 ${food.name} → BLUE-BLACK (starch YES)`;
+                        resultType = 'starch';
+                        emoji = '🔷';
+                    } else {
+                        resultMessage = `🧪 ${food.name} → brown (no starch)`;
+                        resultType = 'info';
+                        emoji = '🟤';
+                    }
+                } else if (activeTest === 'protein') {
+                    if (food.protein) {
+                        resultMessage = `🧴 ${food.name} → VIOLET (protein YES)`;
+                        resultType = 'protein';
+                        emoji = '🟣';
+                    } else {
+                        resultMessage = `🧴 ${food.name} → no violet (no protein)`;
+                        resultType = 'info';
+                        emoji = '⚪';
+                    }
+                } else if (activeTest === 'fat') {
+                    if (food.fat) {
+                        resultMessage = `🧻 ${food.name} → GREASY SPOT (fat YES)`;
+                        resultType = 'fat';
+                        emoji = '🟠';
+                    } else {
+                        resultMessage = `🧻 ${food.name} → no grease (no fat)`;
+                        resultType = 'info';
+                        emoji = '💧';
+                    }
+                }
+
+                addLog(resultMessage, resultType);
+                liveFeedback.innerHTML = `${emoji} ${food.name} tested!`;
+                thoughtEmoji.textContent = emoji + '🧪';
+                
+                // extra fun: if fat positive, we could briefly add a little grease spot effect (simple)
+                if (activeTest === 'fat' && food.fat) {
+                    // add a little 2d effect? we'll just rely on message
+                }
+            }
+        });
+
+        // animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // gently rotate foods? no, but make them float a bit
+            const time = Date.now() * 0.002;
+            foodMeshes.forEach((mesh, i) => {
+                // subtle bob
+                mesh.position.y = foods[i].pos[1] + Math.sin(time + i) * 0.04;
+            });
+
+            controls.update();
+
+            renderer.render(scene, camera);
+            labelRenderer.render(scene, camera);
+        }
+        animate();
+
+        // resize handler
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            labelRenderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // add some floating particles for joy (tiny)
+        const particleGeo = new THREE.BufferGeometry();
+        const particleCount = 200;
+        const posArray = new Float32Array(particleCount * 3);
+        for (let i = 0; i < particleCount; i++) {
+            posArray[i*3] = (Math.random() - 0.5) * 20;
+            posArray[i*3+1] = Math.random() * 8;
+            posArray[i*3+2] = (Math.random() - 0.5) * 20 - 5;
+        }
+        particleGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        const particleMat = new THREE.PointsMaterial({ color: 0xffdd99, size: 0.1, transparent: true });
+        const particles = new THREE.Points(particleGeo, particleMat);
+        scene.add(particles);
+        
+        // simple sparkle movement
+        function sparkle() {
+            particles.rotation.y += 0.0002;
+            requestAnimationFrame(sparkle);
+        }
+        sparkle();
+
+        console.log('ready! food detectives!');
+    </script>
+</body>
+</html>
