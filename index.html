@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Workshop Course Viewer</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    :root {
+      --bg: #f4f7f2;
+      --panel: #ffffff;
+      --text: #15201a;
+      --muted: #506256;
+      --line: #d8e2d7;
+      --accent: #1f8f5f;
+      --accent-soft: #e7f7ef;
+      --code: #f3f5f7;
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Avenir Next", "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 10% 10%, #dff4e8 0, transparent 30%),
+        radial-gradient(circle at 85% 15%, #edf8e8 0, transparent 40%),
+        var(--bg);
+      min-height: 100vh;
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 20px;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .sidebar,
+    .content {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+    }
+
+    .sidebar {
+      padding: 14px;
+      height: calc(100vh - 40px);
+      position: sticky;
+      top: 20px;
+      overflow: auto;
+    }
+
+    .brand {
+      margin: 4px 6px 16px;
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .lesson-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .lesson-btn {
+      width: 100%;
+      text-align: left;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--text);
+      border-radius: 10px;
+      padding: 10px 12px;
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1.35;
+      transition: 0.15s ease;
+    }
+
+    .lesson-btn:hover {
+      transform: translateY(-1px);
+      border-color: #bdd6c7;
+    }
+
+    .lesson-btn.active {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      font-weight: 600;
+    }
+
+    .content {
+      min-height: calc(100vh - 40px);
+      padding: 28px clamp(16px, 3vw, 36px);
+      overflow: auto;
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 20px;
+    }
+
+    #viewer h1,
+    #viewer h2,
+    #viewer h3 { line-height: 1.25; }
+
+    #viewer h1 { margin-top: 0; }
+
+    #viewer pre {
+      background: var(--code);
+      border: 1px solid #e4e9ed;
+      border-radius: 10px;
+      padding: 12px;
+      overflow: auto;
+    }
+
+    #viewer code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.92em;
+    }
+
+    #viewer table {
+      border-collapse: collapse;
+      width: 100%;
+      display: block;
+      overflow-x: auto;
+    }
+
+    #viewer th,
+    #viewer td {
+      border: 1px solid var(--line);
+      padding: 8px;
+      text-align: left;
+    }
+
+    #viewer blockquote {
+      margin-left: 0;
+      border-left: 4px solid #b8dcc7;
+      padding: 8px 12px;
+      background: #f7fbf8;
+    }
+
+    .empty {
+      color: var(--muted);
+      padding: 16px;
+      border: 1px dashed var(--line);
+      border-radius: 10px;
+      background: #fbfdfb;
+    }
+
+    @media (max-width: 960px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        height: auto;
+        position: static;
+      }
+
+      .content {
+        min-height: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <aside class="sidebar">
+      <div class="brand">Workshop Lessons</div>
+      <div id="lessonList" class="lesson-list"></div>
+    </aside>
+
+    <section class="content">
+      <div id="meta" class="meta">Loading lessons...</div>
+      <article id="viewer" class="empty">Select a lesson.</article>
+    </section>
+  </main>
+
+  <script>
+    const LESSON_FILES = [
+      "workshop_daily-checklist.md",
+      "workshop_deep.md",
+      "workshop_minute-by-minute_lesson_plan.md",
+      "workshop_shortest.md",
+      "workshop_student-workbook.md",
+      "workshop_teacher-tracker.md"
+    ];
+
+    const listEl = document.getElementById("lessonList");
+    const viewerEl = document.getElementById("viewer");
+    const metaEl = document.getElementById("meta");
+
+    marked.setOptions({ mangle: false, headerIds: true, breaks: true });
+
+    function lessonLabel(file) {
+      return file
+        .replace(/^workshop_/, "")
+        .replace(/\.md$/, "")
+        .replace(/[_-]+/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase());
+    }
+
+    function setActiveButton(activeFile) {
+      [...listEl.querySelectorAll("button")].forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.file === activeFile);
+      });
+    }
+
+    async function loadLesson(file) {
+      const safeFile = LESSON_FILES.includes(file) ? file : LESSON_FILES[0];
+      if (!safeFile) {
+        metaEl.textContent = "No workshop_*.md files configured.";
+        viewerEl.className = "empty";
+        viewerEl.textContent = "Add markdown files and refresh.";
+        return;
+      }
+
+      const nextUrl = new URL(window.location.href);
+      nextUrl.searchParams.set("file", safeFile);
+      history.replaceState({}, "", nextUrl);
+
+      setActiveButton(safeFile);
+      metaEl.textContent = safeFile;
+
+      try {
+        const response = await fetch(safeFile, { cache: "no-store" });
+        if (!response.ok) {
+          throw new Error(`Failed to load ${safeFile} (${response.status})`);
+        }
+        const markdown = await response.text();
+        viewerEl.className = "";
+        viewerEl.innerHTML = marked.parse(markdown);
+      } catch (error) {
+        viewerEl.className = "empty";
+        viewerEl.textContent = error.message;
+      }
+    }
+
+    function initLessonList() {
+      LESSON_FILES.forEach((file) => {
+        const btn = document.createElement("button");
+        btn.className = "lesson-btn";
+        btn.dataset.file = file;
+        btn.textContent = lessonLabel(file);
+        btn.addEventListener("click", () => loadLesson(file));
+        listEl.appendChild(btn);
+      });
+    }
+
+    function init() {
+      initLessonList();
+      const selected = new URL(window.location.href).searchParams.get("file");
+      loadLesson(selected || LESSON_FILES[0]);
+    }
+
+    init();
+  </script>
+</body>
+</html>
