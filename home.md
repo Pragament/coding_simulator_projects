@@ -11,3 +11,10 @@ If AI doesn’t answer your question, simply *raise your hand* and our team will
 - https://www.tinkercad.com/learn/circuits/collection/arduino
 - https://arcade.makecode.com/tutorials/chase-the-pizza
 - https://makecode.microbit.org/
+- https://createai.microbit.org
+- https://www.w3schools.com
+
+AI chat
+- https://chatgpt.com
+- https://copilot.microsoft.com
+- https://gemini.google.com
