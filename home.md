@@ -18,3 +18,6 @@ AI chat
 - https://chatgpt.com
 - https://copilot.microsoft.com
 - https://gemini.google.com
+
+Tools
+- https://pythonstudio.technikh.com/
