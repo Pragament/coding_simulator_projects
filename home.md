@@ -13,6 +13,7 @@ If AI doesn’t answer your question, simply *raise your hand* and our team will
 - https://makecode.microbit.org/
 - https://createai.microbit.org
 - https://www.w3schools.com
+- https://pictoblox.ai/
 
 AI chat
 - https://chatgpt.com
