@@ -9,6 +9,7 @@ If AI doesn’t answer your question, simply *raise your hand* and our team will
 *Explore → Learn → Ask AI → Ask Us*
 
 - https://www.tinkercad.com/learn/circuits/collection/arduino
+- https://www.tinkercad.com/joinclass/YVJXNTZTZ
 - https://arcade.makecode.com/tutorials/chase-the-pizza
 - https://makecode.microbit.org/
 - https://createai.microbit.org
