@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Code Lab — Coding Concepts for Robotics & Block Coding</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0F1B2E;
+    --panel:#16243C;
+    --panel-2:#1C2C48;
+    --grid:rgba(94,234,212,0.07);
+    --ink:#EAF2F5;
+    --muted:#8FA3BD;
+    --amber:#FFB74D;
+    --cyan:#5EEAD4;
+    --magenta:#FF7BA9;
+    --green:#7ED957;
+    --line:rgba(234,242,245,0.10);
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:
+      linear-gradient(var(--grid) 1px, transparent 1px) 0 0/32px 32px,
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0/32px 32px,
+      var(--bg);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{ font-family:'Space Grotesk', sans-serif; }
+  code, .mono, .readout, .code-line{ font-family:'IBM Plex Mono', monospace; }
+  a{ color:var(--cyan); }
+  ::selection{ background:var(--amber); color:#0F1B2E; }
+
+  /* ---------- Top bar ---------- */
+  header.top{
+    position:sticky; top:0; z-index:50;
+    background:rgba(15,27,46,0.92);
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);
+  }
+  .brand-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 18px 10px;
+    max-width:900px; margin:0 auto;
+  }
+  .brand{ display:flex; align-items:center; gap:10px; }
+  .brand .dot{ width:10px; height:10px; border-radius:2px; background:var(--amber); box-shadow:0 0 10px var(--amber); }
+  .brand span{ font-weight:600; letter-spacing:0.2px; font-size:15px; }
+  .brand small{ display:block; color:var(--muted); font-size:11px; font-weight:400; }
+  nav.pillnav{
+    display:flex; gap:8px; overflow-x:auto; padding:0 18px 12px;
+    max-width:900px; margin:0 auto;
+    scrollbar-width:none;
+  }
+  nav.pillnav::-webkit-scrollbar{ display:none; }
+  nav.pillnav a{
+    flex:0 0 auto;
+    text-decoration:none;
+    color:var(--muted);
+    font-size:12.5px;
+    padding:6px 12px;
+    border:1px solid var(--line);
+    border-radius:999px;
+    white-space:nowrap;
+  }
+  nav.pillnav a:hover, nav.pillnav a.active{ color:var(--ink); border-color:var(--cyan); }
+
+  main{ max-width:900px; margin:0 auto; padding:0 18px 80px; }
+
+  /* ---------- Hero ---------- */
+  .hero{ padding:44px 0 28px; border-bottom:1px solid var(--line); }
+  .hero .kicker{ color:var(--cyan); font-size:13px; font-weight:600; margin:0 0 10px; }
+  .hero h1{
+    font-size:clamp(28px, 7vw, 44px);
+    line-height:1.08; margin:0 0 14px; font-weight:700;
+    max-width:14ch;
+  }
+  .hero p{ color:var(--muted); max-width:52ch; font-size:15.5px; margin:0 0 22px;}
+  .ct-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+  @media(min-width:600px){ .ct-grid{ grid-template-columns:repeat(4,1fr);} }
+  .ct-card{
+    background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+    padding:14px 12px;
+  }
+  .ct-card .icon{ font-size:18px; }
+  .ct-card h3{ font-size:13px; margin:8px 0 4px; font-weight:600; }
+  .ct-card p{ font-size:11.5px; color:var(--muted); margin:0; }
+
+  /* ---------- Module ---------- */
+  section.module{ padding:46px 0; border-bottom:1px solid var(--line); }
+  section.module:last-of-type{ border-bottom:none; }
+  .mod-head{ display:flex; align-items:baseline; gap:14px; margin-bottom:6px; }
+  .mod-num{ font-family:'Space Grotesk',sans-serif; font-size:14px; color:var(--muted); font-weight:600; }
+  .mod-head h2{ font-size:clamp(21px,5vw,27px); margin:0; font-weight:700; }
+  .tag{
+    display:inline-block; font-size:10.5px; padding:3px 9px; border-radius:999px;
+    margin-bottom:16px; border:1px solid var(--line); color:var(--muted);
+  }
+  .explain{ font-size:15px; color:#D6E2EA; max-width:62ch; margin:0 0 18px; }
+  .explain strong{ color:var(--ink); }
+
+  .block{
+    font-family:'IBM Plex Mono',monospace; font-size:13px;
+    border-radius:8px; padding:10px 14px; margin:6px 0; color:#0F1B2E;
+    display:inline-block; max-width:100%;
+  }
+  .block-wrap{ margin:0 0 20px; display:flex; flex-direction:column; gap:6px; align-items:flex-start; }
+
+  .lab{
+    background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+    padding:20px;
+  }
+  .lab .lab-label{ font-size:11px; text-transform:none; color:var(--muted); margin:0 0 14px; letter-spacing:0.2px; }
+  .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .field{ display:flex; flex-direction:column; gap:5px; }
+  .field label{ font-size:11.5px; color:var(--muted); }
+  input[type=text], input[type=number], select{
+    background:var(--panel-2); border:1px solid var(--line); color:var(--ink);
+    padding:9px 10px; border-radius:8px; font-family:'IBM Plex Mono',monospace; font-size:13.5px;
+    width:100%; outline:none;
+  }
+  input[type=text]:focus, input[type=number]:focus, select:focus{ border-color:var(--cyan); }
+  input[type=range]{ width:100%; accent-color:var(--amber); }
+  button{
+    font-family:'IBM Plex Sans',sans-serif; font-weight:600; font-size:13.5px;
+    background:var(--amber); color:#1A1204; border:none; border-radius:8px;
+    padding:10px 16px; cursor:pointer; transition: filter 0.2s;
+  }
+  button:hover{ filter:brightness(1.08); }
+  button.ghost{ background:transparent; border:1px solid var(--line); color:var(--ink); }
+  .readout{
+    background:#0B1524; border:1px solid var(--line); border-radius:8px;
+    padding:12px 14px; margin-top:14px; font-size:14px; min-height:20px;
+    word-break:break-word;
+  }
+  .readout .k{ color:var(--cyan); }
+  .readout .v{ color:var(--amber); }
+  .readout .true{ color:var(--green); }
+  .readout .false{ color:var(--magenta); }
+
+  .console-box{
+    background:#0B1524; border:1px solid var(--line); border-radius:8px;
+    padding:12px 14px; margin-top:14px; font-size:13px; min-height:80px;
+    max-height:180px; overflow-y:auto;
+  }
+  .console-box div{ padding:2px 0; color:var(--muted); border-bottom:1px dashed rgba(255,255,255,0.05); }
+  .console-box div:last-child{ border-bottom:none; }
+  .console-box .fresh{ color:var(--green); }
+
+  .track{ display:flex; gap:6px; flex-wrap:wrap; margin-top:16px; min-height:32px; }
+  .step{
+    width:28px; height:28px; border-radius:6px; border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--muted);
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .step.lit{ background:var(--cyan); color:#0F1B2E; border-color:var(--cyan); font-weight:600; }
+
+  .toggle-row{ display:flex; gap:18px; flex-wrap:wrap; align-items:center; }
+  .switch{ display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none; }
+  .switch .box{
+    width:38px; height:22px; border-radius:999px; background:var(--panel-2); border:1px solid var(--line);
+    position:relative; transition:background .15s;
+  }
+  .switch .box::after{
+    content:''; position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%;
+    background:var(--muted); transition:transform .15s, background .15s;
+  }
+  .switch.on .box{ background:rgba(126,217,87,0.25); border-color:var(--green); }
+  .switch.on .box::after{ transform:translateX(16px); background:var(--green); }
+  .switch span{ font-size:13px; }
+
+  .led{
+    width:16px; height:16px; border-radius:50%; background:#2A3548; display:inline-block; vertical-align:middle;
+    box-shadow:inset 0 0 4px rgba(0,0,0,0.4);
+  }
+  .led.on{ background:var(--green); box-shadow:0 0 12px var(--green); }
+  .led.off-red{ background:var(--magenta); box-shadow:0 0 12px var(--magenta); }
+
+  table.truth{ border-collapse:collapse; width:100%; margin-top:14px; font-size:13px; }
+  table.truth th, table.truth td{ padding:7px 10px; text-align:center; border:1px solid var(--line); }
+  table.truth th{ color:var(--muted); font-weight:500; }
+  table.truth tr.active td{ background:rgba(255,183,77,0.14); color:var(--ink); font-weight:600; }
+
+  .counter-display{
+    font-family:'Space Grotesk',sans-serif; font-size:44px; font-weight:700; text-align:center;
+    padding:10px 0; color:var(--amber);
+  }
+  .counter-btns{ display:flex; gap:10px; justify-content:center; }
+  .counter-btns button{ width:52px; height:44px; font-size:18px; }
+
+  /* ---------- Quiz Styles ---------- */
+  .quiz-q{ margin-bottom:24px; padding-bottom:16px; border-bottom:1px dashed var(--line); }
+  .quiz-q:last-child{ border-bottom:none; margin-bottom:0; padding-bottom:0; }
+  .quiz-q h4{ margin:0 0 12px; font-size:14.5px; font-weight:600; color:var(--ink); line-height:1.4; }
+  .quiz-opt{ display:flex; align-items:flex-start; gap:8px; margin-bottom:8px; cursor:pointer; font-size:13.5px; color:var(--muted); transition:color 0.1s;}
+  .quiz-opt:hover{ color:#fff; }
+  .quiz-opt input[type=radio]{ accent-color:var(--amber); width:16px; height:16px; margin-top:3px; cursor:pointer; flex-shrink:0; }
+  
+  .quiz-cert{ text-align:center; background:var(--panel-2); border:2px solid var(--amber); border-radius:12px; padding:30px 20px; box-shadow:0 10px 30px rgba(0,0,0,0.5);}
+  .quiz-cert h2{ font-size:28px; color:var(--amber); margin:0 0 10px; font-family:'Space Grotesk', sans-serif; }
+  .quiz-cert p{ font-size:15px; margin:0 0 10px; color:var(--ink); }
+  .quiz-cert .score{ font-size:52px; font-weight:700; color:var(--cyan); font-family:'Space Grotesk', sans-serif; line-height:1; margin:20px 0; }
+  .quiz-cert .detail{ font-size:13px; color:var(--muted); font-family:'IBM Plex Mono', monospace; }
+
+  footer{ padding:40px 0 20px; color:var(--muted); font-size:12.5px; border-top:1px solid var(--line); margin-top:10px; }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation:none !important; transition:none !important; }
+  }
+  @keyframes spinDice{ 0%{ transform:rotate(0deg) scale(1);} 50%{ transform:rotate(180deg) scale(1.15);} 100%{ transform:rotate(360deg) scale(1);} }
+  .spin{ animation:spinDice .4s ease; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand-row">
+    <div class="brand">
+      <div class="dot"></div>
+      <div>
+        <span>Code Lab</span>
+        <small>Robotics &amp; Block Coding · Class 9–10</small>
+      </div>
+    </div>
+  </div>
+  <nav class="pillnav">
+    <a href="#variables">Variables</a>
+    <a href="#random">Random</a>
+    <a href="#conditionals">If–Else</a>
+    <a href="#modulus">Modulus</a>
+    <a href="#comparison">Comparison</a>
+    <a href="#events">Events</a>
+    <a href="#input">Input</a>
+    <a href="#output">Output</a>
+    <a href="#loops">Loops</a>
+    <a href="#counters">Counters</a>
+    <a href="#boolean">Boolean Logic</a>
+    <a href="#quiz" style="color:var(--amber); border-color:var(--amber); font-weight:600;">Quiz Check</a>
+  </nav>
+</header>
+
+<main>
+
+  <section class="hero">
+    <p class="kicker">Workshop guide</p>
+    <h1>Think like a robot's brain, one block at a time.</h1>
+    <p>Every robot you build runs on the same handful of ideas. This guide walks through each one with a plain-language explanation and a small lab you can play with right on your phone before you meet the real hardware.</p>
+    <div class="ct-grid">
+      <div class="ct-card"><div class="icon">🔍</div><h3>Abstraction</h3><p>Focus on what matters, hide the rest.</p></div>
+      <div class="ct-card"><div class="icon">🧩</div><h3>Algorithm Design</h3><p>Write the steps in the right order.</p></div>
+      <div class="ct-card"><div class="icon">🪜</div><h3>Decomposition</h3><p>Split a big problem into small ones.</p></div>
+      <div class="ct-card"><div class="icon">🔁</div><h3>Pattern Recognition</h3><p>Spot what repeats and reuse it.</p></div>
+    </div>
+  </section>
+
+  <!-- 1 VARIABLES -->
+  <section class="module" id="variables">
+    <div class="mod-head"><span class="mod-num">01</span><h2>Variables</h2></div>
+    <span class="tag">stores a value your robot can change</span>
+    <p class="explain">A variable is a <strong>named memory slot</strong> in your robot's brain. Instead of writing the number <code>82</code> everywhere in your program, you store it in a slot called <code>battery_level</code> — and the program reads whatever is in that slot right now.</p>
+    <div class="block-wrap">
+      <div class="block" style="background:var(--amber)">set battery_level to 82</div>
+      <div class="block" style="background:var(--amber)">change battery_level by −5</div>
+    </div>
+    <div class="lab">
+      <p class="lab-label">Try it — create your own variable</p>
+      <div class="row">
+        <div class="field" style="flex:1;min-width:140px;">
+          <label>variable name</label>
+          <input type="text" id="varName" value="battery_level">
+        </div>
+        <div class="field" style="flex:1;min-width:140px;">
+          <label>value</label>
+          <input type="text" id="varValue" value="82">
+        </div>
+        <button onclick="setVariable()">Store it</button>
+      </div>
+      <div class="readout" id="varOut">set <span class="k">battery_level</span> = <span class="v">82</span></div>
+    </div>
+  </section>
+
+  <!-- 2 RANDOM -->
+  <section class="module" id="random">
+    <div class="mod-head"><span class="mod-num">02</span><h2>Random Number Generation</h2></div>
+    <span class="tag">unpredictable, on purpose</span>
+    <p class="explain">Sometimes you <strong>want</strong> your robot to be unpredictable — picking a random direction to turn if it hits a wall, or a random delay before it moves. A random block picks a number between a low and high value, and you can't know which one in advance.</p>
+    <div class="block-wrap">
+      <div class="block" style="background:var(--magenta)">set turn_angle to pick random 30 to 90</div>
+    </div>
+    <div class="lab">
+      <p class="lab-label">Try it — roll for a number</p>
+      <div class="row">
+        <div class="field"><label>from</label><input type="number" id="randMin" value="1" style="width:80px"></div>
+        <div class="field"><label>to</label><input type="number" id="randMax" value="6" style="width:80px"></div>
+        <button onclick="rollRandom()">🎲 Roll</button>
+      </div>
+      <div class="readout">pick random → <span class="v" id="randOut" style="font-size:20px;display:inline-block;">–</span></div>
+    </div>
+  </section>
+
+  <!-- 3 CONDITIONALS -->
+  <section class="module" id="conditionals">
+    <div class="mod-head"><span class="mod-num">03</span><h2>Conditional Statements (If–Else)</h2></div>
+    <span class="tag">branching decisions</span>
+    <p class="explain">An <strong>if–else</strong> block lets your robot choose between two paths depending on a sensor reading. <em>If</em> the condition is true, run one set of blocks; <em>otherwise (else)</em>, run a different set. Only one branch ever runs.</p>
+    <div class="block-wrap">
+      <div class="block" style="background:var(--cyan)">if light_sensor &lt; 50 then</div>
+      <div class="block" style="background:var(--cyan);margin-left:18px;">&nbsp;&nbsp;turn on headlights</div>
+      <div class="block" style="background:var(--cyan)">else</div>
+      <div class="block" style="background:var(--cyan);margin-left:18px;">&nbsp;&nbsp;turn off headlights</div>
+    </div>
+    <div class="lab">
+      <p class="lab-label">Try it — drag the light sensor reading</p>
+      <div class="field">
+        <label>light_sensor value: <span id="lightVal">50</span></label>
+        <input type="range" min="0" max="100" value="50" id="lightSlider" oninput="updateConditional()">
+      </div>
+      <div class="readout" id="condOut"></div>
+    </div>
+  </section>
+
+  <!-- 4 MODULUS -->
+  <section class="module" id="modulus">
+    <div class="mod-head"><span class="mod-num">04</span><h2>Modulus Operator (%)</h2></div>
+    <span class="tag">the remainder after division</span>
+    <p class="explain"><code>%</code> gives you what's <strong>left over</strong> after dividing one number by another. Robots use it constantly — e.g. checking if a step counter is a multiple of 4 to know when to blink an LED, or telling even numbers from odd ones.</p>
+    <div class="block-wrap">
+      <div class="block" style="background:var(--green)">set remainder to (steps mod 4)</div>
+    </div>
+    <div class="lab">
+      <p class="lab-label">Try it — compute a % b</p>
+      <div class="row">
+        <div class="field"><label>a</label><input type="number" id="modA" value="17" style="width:80px"></div>
+        <div class="field"><label style="visibility:hidden">%</label><span style="padding-top:8px;color:var(--muted)">%</span></div>
+        <div class="field"><label>b</label><input type="number" id="modB" value="5" style="width:80px"></div>
+        <button onclick="calcModulus()">Calculate</button>
+      </div>
+      <div class="readout" id="modOut"></div>
+      <p class="lab-label" style="margin-top:16px;">Bonus — even or odd checker</p>
+      <div class="row">
+        <input type="number" id="modEO" value="14" style="width:100px">
+        <button onclick="checkEvenOdd()">Check</button>
+      </div>
+      <div class="readout" id="eoOut"></div>
+    </div>
+  </section>
+
+  <!-- 5 COMPARISON -->
+  <section class="module" id="comparison">
+    <div class="mod-head"><span class="mod-num">05</span><h2>Comparison Operators</h2></div>
+    <span class="tag">true or false, always</span>
+    <p class="explain">Comparison operators (<code>&gt;</code>, <code>&lt;</code>, <code>=</code>, <code>≥</code>, <code>≤</code>, <code>≠</code>) compare two values and always produce a <strong>boolean</strong> — true or false. These are what feed the condition inside an if-block.</p>
+    <div class="lab">
+      <p class="lab-label">Try it — build a comparison</p>
+      <div class="row">
+        <input type="number" id="cmpA" value="12" style="width:80px">
+        <select id="cmpOp">
+          <option value=">">&gt;</option>
+          <option value="<">&lt;</option>
+          <option value="==">=</option>
+          <option value=">=">&ge;</option>
+          <option value="<=">&le;</option>
+          <option value="!=">&ne;</option>
+        </select>
+        <input type="number" id="cmpB" value="7" style="width:80px">
+        <button onclick="evalComparison()">Evaluate</button>
+      </div>
+      <div class="readout" id="cmpOut"></div>
+    </div>
+  </section>
+
+  <!-- 6 EVENTS -->
+  <section class="module" id="events">
+    <div class="mod-head"><span class="mod-num">06</span><h2>Events</h2></div>
+    <span class="tag">the trigger that starts a program</span>
+    <p class="explain">An event is something that happens — a button press, a bump, a timer — that <strong>starts</strong> a block of code running. Your program sits and waits (listens) until the event fires, rather than running top to bottom immediately.</p>
+    <div class="block-wrap">
+      <div class="block" style="background:var(--amber)">when bump_sensor is pressed</div>
+      <div class="block" style="background:var(--amber);margin-left:18px;">&nbsp;&nbsp;move backward 1 second</div>
+    </div>
+    <div class="lab">
+      <p class="lab-label">Try it — press the sensor</p>
+      <button onclick="fireEvent()">⏺ Press bump sensor</button>
+      <div class="console-box" id="eventLog"><div>waiting for event…</div></div>
+    </div>
+  </section>
+
+  <!-- 7 INPUT -->
+  <section class="module" id="input">
+    <div class="mod-head"><span class="mod-num">07</span><h2>Input</h2></div>
+    <span class="tag">bringing outside data into the program</span>
+    <p class="explain">Input is how your program <strong>receives</strong> data — from a sensor, a keypad, or a user typing something. The program pauses, waits for the value, then stores it in a variable to use later.</p>
+    <div class="block-wrap">
+      <div class="block" style="background:var(--amber)">ask "What's your name?" and wait</div>
+    </div>
+    <div class="lab">
+      <p class="lab-label">Try it — give the program some input</p>
+      <div class="row">
+        <input type="text" id="inputName" placeholder="Type your name" style="flex:1;min-width:160px;">
+        <button onclick="runInput()">Run</button>
+      </div>
+      <div class="readout" id="inputOut"></div>
+    </div>
+  </section>
+
+  <!-- 8 OUTPUT -->
+  <section class="module" id="output">
+    <div class="mod-head"><span class="mod-num">08</span><h2>Output</h2></div>
+    <span class="tag">what the program shows back</span>
+    <p class="explain">Output is the flip side of input — the program <strong>sends information back out</strong>, whether that's text on a screen, an LED turning on, or a motor spinning. Every output block adds one more line to what the world sees.</p>
+    <div class="block-wrap">
+      <div class="block" style="background:var(--green)">say "Hello, ready to roll!"</div>
+    </div>
+    <div class="lab">
+      <p class="lab-label">Try it — queue up some output</p>
+      <div class="row">
+        <button class="ghost" onclick="addOutput('System ready.')">say "System ready."</button>
+        <button class="ghost" onclick="addOutput('Motor speed set to 50%.')">say "Motor speed set to 50%."</button>
+        <button class="ghost" onclick="addOutput('Obstacle detected!')">say "Obstacle detected!"</button>
+      </div>
+      <div class="console-box" id="outputLog"><div>screen is empty…</div></div>
+    </div>
+  </section>
+
+  <!-- 9 LOOPS -->
+  <section class="module" id="loops">
+    <div class="mod-head"><span class="mod-num">09</span><h2>Loops</h2></div>
+    <span class="tag">repeat without rewriting</span>
+    <p class="explain">A loop repeats a block of code a set number of times, or until a condition changes. Instead of copy-pasting "move forward" ten times, wrap it in a <strong>repeat 10</strong> block.</p>
+    <div class="block-wrap">
+      <div class="block" style="background:var(--cyan)">repeat 6 times</div>
+      <div class="block" style="background:var(--cyan);margin-left:18px;">&nbsp;&nbsp;move forward 1 step</div>
+    </div>
+    <div class="lab">
+      <p class="lab-label">Try it — watch a loop run</p>
+      <div class="row">
+        <div class="field"><label>repeat</label><input type="number" id="loopN" value="8" min="1" max="20" style="width:80px"></div>
+        <button onclick="runLoop()">Run loop</button>
+      </div>
+      <div class="track" id="loopTrack"></div>
+    </div>
+  </section>
+
+  <!-- 10 COUNTERS -->
+  <section class="module" id="counters">
+    <div class="mod-head"><span class="mod-num">10</span><h2>Counters</h2></div>
+    <span class="tag">a variable that keeps score</span>
+    <p class="explain">A counter is just a variable, usually starting at 0, that goes up (or down) by a fixed amount each time something happens — laps completed, obstacles avoided, points scored.</p>
+    <div class="block-wrap">
+      <div class="block" style="background:var(--amber)">set laps to 0</div>
+      <div class="block" style="background:var(--amber)">change laps by 1</div>
+    </div>
+    <div class="lab">
+      <p class="lab-label">Try it — run the lap counter</p>
+      <div class="counter-display" id="counterVal">0</div>
+      <div class="counter-btns">
+        <button class="ghost" onclick="changeCounter(-1)">−1</button>
+        <button onclick="changeCounter(1)">+1</button>
+        <button class="ghost" onclick="changeCounter(0,true)">reset</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11 BOOLEAN LOGIC -->
+  <section class="module" id="boolean">
+    <div class="mod-head"><span class="mod-num">11</span><h2>Boolean Logic</h2></div>
+    <span class="tag">combining true/false conditions</span>
+    <p class="explain"><strong>AND</strong>, <strong>OR</strong>, and <strong>NOT</strong> let you combine multiple conditions into one. A line-follower robot might only stop if the <em>left sensor AND the right sensor</em> both see black — one alone isn't enough.</p>
+    <div class="lab">
+      <p class="lab-label">Try it — flip the sensors</p>
+      <div class="toggle-row">
+        <div class="switch" id="swA" onclick="toggleSwitch('A')"><div class="box"></div><span>Sensor A</span></div>
+        <div class="switch" id="swB" onclick="toggleSwitch('B')"><div class="box"></div><span>Sensor B</span></div>
+        <div class="field" style="min-width:120px;">
+          <select id="boolOp" onchange="updateBoolean()">
+            <option value="AND">A AND B</option>
+            <option value="OR">A OR B</option>
+            <option value="NOT">NOT A</option>
+          </select>
+        </div>
+      </div>
+      <div class="readout" style="display:flex;align-items:center;gap:10px;">
+        result: <span class="led" id="resultLed"></span> <span id="boolResultText" class="mono">false</span>
+      </div>
+      <table class="truth" id="truthTable"></table>
+    </div>
+  </section>
+
+  <!-- 12 QUIZ CHECK -->
+  <section class="module" id="quiz">
+    <div class="mod-head"><span class="mod-num">12</span><h2>Knowledge Check</h2></div>
+    <span class="tag">test your understanding</span>
+    <p class="explain">You've explored all the core concepts. Now it's time to see what you remember. Complete all 25 questions below, and show your final score to your instructor.</p>
+    
+    <div class="lab" id="quiz-container">
+      <div class="field" style="margin-bottom:26px;">
+        <label>Student Full Name (Required for submission)</label>
+        <input type="text" id="studentName" placeholder="Enter your first and last name" style="font-family:'IBM Plex Sans', sans-serif;">
+      </div>
+      
+      <div id="quiz-questions-wrapper"></div>
+      
+      <button id="submitQuizBtn" onclick="submitQuiz()" style="margin-top:24px; width:100%; font-size:15px; padding:14px;">Submit Quiz &amp; Get Score</button>
+      
+      <div id="quizResultWrapper" style="display:none; margin-top:20px;"></div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div style="max-width:900px;margin:0 auto;">
+    Code Lab · a hands-on primer for the robotics &amp; block coding workshop. Work through each lab, then try the same idea on your own kit.
+  </div>
+</footer>
+
+<script>
+  // ======================================
+  // MODULE SCRIPTS
+  // ======================================
+
+  // 1 Variables
+  function setVariable(){
+    const n = document.getElementById('varName').value || 'my_variable';
+    const v = document.getElementById('varValue').value;
+    document.getElementById('varOut').innerHTML = `set <span class="k">${escapeHtml(n)}</span> = <span class="v">${escapeHtml(v)}</span>`;
+  }
+
+  // 2 Random
+  function rollRandom(){
+    const min = parseInt(document.getElementById('randMin').value) || 0;
+    const max = parseInt(document.getElementById('randMax').value) || 0;
+    const lo = Math.min(min,max), hi = Math.max(min,max);
+    const n = Math.floor(Math.random()*(hi-lo+1))+lo;
+    const el = document.getElementById('randOut');
+    el.textContent = n;
+    el.classList.remove('spin'); void el.offsetWidth; el.classList.add('spin');
+  }
+
+  // 3 Conditionals
+  function updateConditional(){
+    const val = document.getElementById('lightSlider').value;
+    document.getElementById('lightVal').textContent = val;
+    const out = document.getElementById('condOut');
+    if(parseInt(val) < 50){
+      out.innerHTML = `light_sensor = ${val} → condition is <span class="true">true</span> → 💡 headlights ON`;
+    } else {
+      out.innerHTML = `light_sensor = ${val} → condition is <span class="false">false</span> → headlights OFF`;
+    }
+  }
+  updateConditional();
+
+  // 4 Modulus
+  function calcModulus(){
+    const a = parseInt(document.getElementById('modA').value)||0;
+    const b = parseInt(document.getElementById('modB').value)||1;
+    const r = a % b;
+    document.getElementById('modOut').innerHTML = `${a} % ${b} = <span class="v">${r}</span>`;
+  }
+  function checkEvenOdd(){
+    const n = parseInt(document.getElementById('modEO').value)||0;
+    const isEven = (n % 2 === 0);
+    document.getElementById('eoOut').innerHTML = `${n} % 2 = ${n%2} → <span class="${isEven?'true':'false'}">${isEven ? 'even' : 'odd'}</span>`;
+  }
+  calcModulus(); checkEvenOdd();
+
+  // 5 Comparison
+  function evalComparison(){
+    const a = parseFloat(document.getElementById('cmpA').value);
+    const b = parseFloat(document.getElementById('cmpB').value);
+    const op = document.getElementById('cmpOp').value;
+    let result;
+    switch(op){
+      case '>': result = a > b; break;
+      case '<': result = a < b; break;
+      case '==': result = a === b; break;
+      case '>=': result = a >= b; break;
+      case '<=': result = a <= b; break;
+      case '!=': result = a !== b; break;
+    }
+    const opText = {'>':'&gt;','<':'&lt;','==':'=','>=':'&ge;','<=':'&le;','!=':'&ne;'}[op];
+    document.getElementById('cmpOut').innerHTML = `${a} ${opText} ${b}  →  <span class="${result?'true':'false'}">${result}</span>`;
+  }
+  evalComparison();
+
+  // 6 Events
+  function fireEvent(){
+    const log = document.getElementById('eventLog');
+    if(log.firstChild.textContent === 'waiting for event…') log.innerHTML = '';
+    const entry = document.createElement('div');
+    entry.className = 'fresh';
+    entry.textContent = `⚡ event fired: bump_sensor pressed → move backward 1s`;
+    log.prepend(entry);
+    setTimeout(()=>entry.classList.remove('fresh'), 900);
+  }
+
+  // 7 Input
+  function runInput(){
+    const name = document.getElementById('inputName').value.trim() || 'coder';
+    document.getElementById('inputOut').innerHTML = `program received input → <span class="v">"${escapeHtml(name)}"</span><br>say "Hello, ${escapeHtml(name)}! Ready to code?"`;
+  }
+
+  // 8 Output
+  function addOutput(text){
+    const log = document.getElementById('outputLog');
+    if(log.firstChild.textContent === 'screen is empty…') log.innerHTML = '';
+    const entry = document.createElement('div');
+    entry.className = 'fresh';
+    entry.textContent = `» ${text}`;
+    log.appendChild(entry);
+    log.scrollTop = log.scrollHeight;
+    setTimeout(()=>entry.classList.remove('fresh'), 900);
+  }
+
+  // 9 Loops
+  function runLoop(){
+    const n = Math.max(1, Math.min(20, parseInt(document.getElementById('loopN').value)||1));
+    const track = document.getElementById('loopTrack');
+    track.innerHTML = '';
+    for(let i=1;i<=n;i++){
+      const step = document.createElement('div');
+      step.className = 'step';
+      step.textContent = i;
+      track.appendChild(step);
+    }
+    const steps = track.children;
+    let i = 0;
+    const iv = setInterval(()=>{
+      if(i>0) steps[i-1].classList.remove('lit');
+      if(i<steps.length){ steps[i].classList.add('lit'); i++; }
+      else { clearInterval(iv); }
+    }, 220);
+  }
+
+  // 10 Counters
+  let counterValue = 0;
+  function changeCounter(delta, reset){
+    counterValue = reset ? 0 : counterValue + delta;
+    document.getElementById('counterVal').textContent = counterValue;
+  }
+
+  // 11 Boolean logic
+  let boolState = {A:false, B:false};
+  function toggleSwitch(which){
+    boolState[which] = !boolState[which];
+    document.getElementById('sw'+which).classList.toggle('on', boolState[which]);
+    updateBoolean();
+  }
+  function computeBool(a,b,op){
+    if(op==='AND') return a && b;
+    if(op==='OR') return a || b;
+    if(op==='NOT') return !a;
+  }
+  function updateBoolean(){
+    const op = document.getElementById('boolOp').value;
+    const result = computeBool(boolState.A, boolState.B, op);
+    document.getElementById('resultLed').className = 'led ' + (result ? 'on' : 'off-red');
+    document.getElementById('boolResultText').textContent = result;
+
+    const table = document.getElementById('truthTable');
+    let rows;
+    if(op === 'NOT'){
+      rows = [ [true], [false] ];
+      table.innerHTML = `<tr><th>A</th><th>NOT A</th></tr>` +
+        rows.map(r=>{
+          const active = r[0]===boolState.A;
+          return `<tr class="${active?'active':''}"><td>${r[0]}</td><td>${!r[0]}</td></tr>`;
+        }).join('');
+    } else {
+      rows = [[true,true],[true,false],[false,true],[false,false]];
+      table.innerHTML = `<tr><th>A</th><th>B</th><th>${op}</th></tr>` +
+        rows.map(r=>{
+          const active = r[0]===boolState.A && r[1]===boolState.B;
+          return `<tr class="${active?'active':''}"><td>${r[0]}</td><td>${r[1]}</td><td>${computeBool(r[0],r[1],op)}</td></tr>`;
+        }).join('');
+    }
+  }
+  updateBoolean();
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // ======================================
+  // 12 QUIZ SYSTEM (25 Questions)
+  // ======================================
+  const quizData = [
+    { q: "Breaking down a complex robotics task into smaller, manageable parts is called...", options: ["Abstraction", "Algorithm Design", "Decomposition", "Pattern Recognition"], a: 2 },
+    { q: "Focusing only on the essential details and ignoring the rest is known as...", options: ["Decomposition", "Abstraction", "Loops", "Boolean Logic"], a: 1 },
+    { q: "Creating a step-by-step set of instructions for a robot to follow is called...", options: ["Algorithm Design", "Pattern Recognition", "Abstraction", "Modulus"], a: 0 },
+    { q: "Spotting similarities in code to reuse past solutions is known as...", options: ["Output", "Pattern Recognition", "Decomposition", "Events"], a: 1 },
+    { q: "In programming, what is a \"variable\"?", options: ["A fixed number that never changes", "A named memory slot to store and update data", "A sensor on a robot", "An error in the code"], a: 1 },
+    { q: "If your program sets `score = 10` and then runs `change score by -3`, what is the final score?", options: ["10", "13", "7", "-3"], a: 2 },
+    { q: "Why might a programmer use a Random Number block in a robot?", options: ["To make the robot follow a strict straight line", "To make the robot's behavior unpredictable, like wandering in a maze", "To permanently delete a variable", "To calculate math faster"], a: 1 },
+    { q: "If a random block picks a number from 1 to 4, which set of outcomes is possible?", options: ["1, 2, 3, or 4", "0, 1, 2, or 3", "1, 4, 8, or 12", "Only 1 or 4"], a: 0 },
+    { q: "An If-Else statement is used to...", options: ["Repeat code forever", "Store a number", "Make branching decisions based on a condition", "Generate random events"], a: 2 },
+    { q: "If the condition `battery > 20` is FALSE, what happens in an If-Else block?", options: ["The 'If' section runs", "The 'Else' section runs", "The robot crashes", "The program restarts"], a: 1 },
+    { q: "What does the modulus operator (%) calculate?", options: ["The percentage of a number", "The quotient of division", "The remainder after division", "The square root"], a: 2 },
+    { q: "What is the result of `17 % 5`?", options: ["3", "2", "3.4", "0"], a: 1 },
+    { q: "How can you use modulus to check if a variable X is an even number?", options: ["X % 2 == 0", "X % 2 == 1", "X % 1 == 2", "X % X == 0"], a: 0 },
+    { q: "What is the result of the comparison `50 >= 50`?", options: ["False", "True", "Error", "0"], a: 1 },
+    { q: "Which of these operators means \"not equal to\"?", options: ["==", "<=", "!=", ">="], a: 2 },
+    { q: "In block coding, what is an \"event\"?", options: ["A math calculation", "A trigger that starts a block of code, like a button press", "A type of variable", "A step in a loop"], a: 1 },
+    { q: "Which of the following is the best example of an event?", options: ["When obstacle detected...", "Set speed to 50", "Print Hello", "Wait 1 second"], a: 0 },
+    { q: "Which of the following represents an INPUT for a robot?", options: ["A motor turning", "An LED blinking", "A speaker beeping", "A temperature sensor reading the room"], a: 3 },
+    { q: "Which of the following represents an OUTPUT for a robot?", options: ["A distance sensor", "A camera", "A spinning wheel", "A microphone"], a: 2 },
+    { q: "What is the main purpose of a loop?", options: ["To stop the program", "To repeat instructions without having to rewrite them", "To choose between two options", "To store sensor data"], a: 1 },
+    { q: "If a robot is programmed to drive in a square, how many times should it loop a \"Move forward, turn 90°\" sequence?", options: ["2", "3", "4", "8"], a: 2 },
+    { q: "What is a counter?", options: ["A sensor that counts obstacles", "A variable used to keep track of how many times something happens", "A block that measures time", "An output screen"], a: 1 },
+    { q: "Which block would correctly update a counter named `laps` after completing a lap?", options: ["set laps to 0", "change laps by 1", "if laps == 1", "print laps"], a: 1 },
+    { q: "According to Boolean Logic, if Condition A is True and Condition B is False, what is the result of `A AND B`?", options: ["True", "False", "Sometimes True", "Error"], a: 1 },
+    { q: "According to Boolean Logic, if Condition A is True and Condition B is False, what is the result of `A OR B`?", options: ["True", "False", "Both", "Neither"], a: 0 }
+  ];
+
+  // Render questions
+  const quizWrapper = document.getElementById('quiz-questions-wrapper');
+  let quizHTML = "";
+  quizData.forEach((item, index) => {
+    quizHTML += `<div class="quiz-q">
+      <h4>${index + 1}. ${escapeHtml(item.q)}</h4>`;
+    item.options.forEach((opt, optIdx) => {
+      quizHTML += `<label class="quiz-opt">
+        <input type="radio" name="q${index}" value="${optIdx}">
+        <span>${escapeHtml(opt)}</span>
+      </label>`;
+    });
+    quizHTML += `</div>`;
+  });
+  quizWrapper.innerHTML = quizHTML;
+
+  function submitQuiz() {
+    const studentName = document.getElementById('studentName').value.trim();
+    if(!studentName) {
+      alert("Please enter your name before submitting the quiz.");
+      document.getElementById('studentName').focus();
+      return;
+    }
+
+    let score = 0;
+    let answeredCount = 0;
+
+    quizData.forEach((item, index) => {
+      const selected = document.querySelector(`input[name="q${index}"]:checked`);
+      if(selected) {
+        answeredCount++;
+        if(parseInt(selected.value) === item.a) {
+          score++;
+        }
+      }
+    });
+
+    if(answeredCount < quizData.length) {
+      const confirmSubmit = confirm(`You have only answered ${answeredCount} out of ${quizData.length} questions. Unanswered questions will be marked as incorrect. Submit anyway?`);
+      if(!confirmSubmit) return;
+    }
+
+    const percentage = Math.round((score / quizData.length) * 100);
+    const dateStr = new Date().toLocaleString();
+
+    // Hide the questions and show the result scorecard
+    document.getElementById('quiz-questions-wrapper').style.display = 'none';
+    document.getElementById('studentName').parentElement.style.display = 'none';
+    document.getElementById('submitQuizBtn').style.display = 'none';
+
+    const resultBox = document.getElementById('quizResultWrapper');
+    resultBox.style.display = 'block';
+    
+    // Determine color based on pass/fail logic (e.g., >70% is green, else amber/magenta)
+    let scoreColor = "var(--cyan)";
+    if(percentage >= 80) scoreColor = "var(--green)";
+    else if(percentage < 50) scoreColor = "var(--magenta)";
+
+    resultBox.innerHTML = `
+      <div class="quiz-cert">
+        <h2>Digital Scorecard</h2>
+        <p><strong>Student:</strong> ${escapeHtml(studentName)}</p>
+        <div class="score" style="color:${scoreColor}">${score} / ${quizData.length}</div>
+        <p><strong>Accuracy:</strong> ${percentage}%</p>
+        <div class="detail">Completed: ${dateStr}</div>
+      </div>
+      <p style="text-align:center; margin-top:20px; font-size:13px; color:var(--muted);">
+        Leave this screen open and show it to your instructor.
+      </p>
+    `;
+  }
+</script>
+
+</body>
+</html>
