@@ -187,6 +187,7 @@
   <script>
     const LESSON_FILES = [
       "home.md",
+      "esp32-led-buzzer.md",
       "workshop_robotics-&-block-coding-·-class-9–10.html",
       "workshop-bipc-python.md",
       "workshop-python-math-class11.md",
@@ -250,7 +251,16 @@
         }
       } catch (error) {
         viewerEl.className = "empty";
-        viewerEl.textContent = error.message;
+        if (window.location.protocol === "file:") {
+          viewerEl.innerHTML = `
+            <h3>⚠️ Browser Security Restriction (file://)</h3>
+            <p>Browsers block fetching local Markdown files when opened directly via <code>file://</code>.</p>
+            <p><strong>Solution:</strong> Please open the project using your local web server:</p>
+            <p><a href="http://localhost:8080/?file=${encodeURIComponent(safeFile)}" target="_blank" style="display:inline-block; padding:8px 16px; background:#1f8f5f; color:white; text-decoration:none; border-radius:6px; font-weight:600;">Open http://localhost:8080</a></p>
+          `;
+        } else {
+          viewerEl.textContent = error.message;
+        }
       }
     }
 
